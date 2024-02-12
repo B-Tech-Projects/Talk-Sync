@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "TalkSync - Speech to Speech Extension",
+  "version": "1.0",
+  "description": "Converts speech to target language speech",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*.googleapis.com/"
+  ],
+  "action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "48": "icon.png"
+  },
+  
+    "content_security_policy": {
+      "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self';",
+      "connect-src": ["https://*.googleapis.com/", "http://*/*"],
+      "media-src": ["self", "blob:"]
+    }
+
+  
+
+}

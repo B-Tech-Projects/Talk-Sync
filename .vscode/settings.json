@@ -1,0 +1,8 @@
+{
+    "liveServer.settings.https": {
+      "enable": true,
+      "cert": "D:/TalkSyncDemo/localhost.crt",
+      "key": "D:/TalkSyncDemo/localhost.key"
+    }
+  }
+  
