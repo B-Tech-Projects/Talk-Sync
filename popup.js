@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to perform translation using Google Cloud Translate API and display on the screen
     async function translateAndDisplay(text, sourceLanguage, targetLanguage) {
-        const apiKey = 'AIzaSyAG4b6EvtKIO4EypNkbKgiLrQqB9Q3-loY';
+        const apiKey = 'Google api key';
         const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
 
         const response = await fetch(apiUrl, {
