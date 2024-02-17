@@ -1,22 +1,45 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TalkSync - Speech to Speech Extension</title>
+    <title>TalkSync Popup</title>
+    <link rel="stylesheet" type="text/css" href="popup.css">
+    <script src="popup.js"></script>
 </head>
+
 <body>
-    <label for="language">Select Target Language:</label>
-    <select id="language">
-        <!-- Add language options based on your preferences -->
-        <option value="en">English</option>
+    <label for="sourceLanguage">Source Language:</label>
+    <select id="sourceLanguage">
+        <!-- Add more languages as needed -->
+        <option value="en" selected>English</option>
+        <option value="hi">Hindi</option>
+        <option value="te">Telugu</option>
+        <option value="bn">Bengali</option>
+        <option value="ml">Malayalam</option>
         <option value="es">Spanish</option>
-        <option value="fr">French</option>
         <!-- Add more languages as needed -->
     </select>
+
+    <br>
+
+    <label for="targetLanguage">Target Language:</label>
+    <select id="targetLanguage">
+        <!-- Add more languages as needed -->
+        <option value="hi">Hindi</option>
+        <option value="te">Telugu</option>
+        <option value="bn">Bengali</option>
+        <option value="ml">Malayalam</option>
+        <option value="en">English</option>
+        <option value="es">Spanish</option>
+        <!-- Add more languages as needed -->
+    </select>
+
+    <br>
+
     <button id="startButton">Start Transcription</button>
     <button id="stopButton">Stop Transcription</button>
-    <div id="transcriptionResult"></div>
-    <script src="popup.js"></script>
+
+    <div id="conversationResult"></div>
 </body>
+
 </html>

@@ -1,34 +1,41 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const languageDropdown = document.getElementById('language');
+    const sourceLanguageDropdown = document.getElementById('sourceLanguage');
+    const targetLanguageDropdown = document.getElementById('targetLanguage');
     const startButton = document.getElementById('startButton');
     const stopButton = document.getElementById('stopButton');
-    const transcriptionResult = document.getElementById('transcriptionResult');
-    const translationResult = document.getElementById('translationResult');
+    const conversationResult = document.getElementById('conversationResult');
 
     let recognition = null;
+    let currentTranscription = ''; // Track the current transcription
 
     startButton.addEventListener('click', async function () {
         try {
+            const sourceLanguage = sourceLanguageDropdown.value;
+            const targetLanguage = targetLanguageDropdown.value;
+
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             console.log('Microphone access granted!');
 
             recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
             recognition.continuous = true;
+            recognition.interimResults = true; // Enable interim results
+            recognition.lang = sourceLanguage;
 
-            recognition.onresult = async function (event) {
-                const transcript = event.results[0][0].transcript;
-                console.log('Live Transcription:', transcript);
+            recognition.onresult = function (event) {
+                let interimTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    interimTranscript += event.results[i][0].transcript + ' ';
+                }
+
+                // Update the current transcription with the interim transcript
+                currentTranscription = interimTranscript;
 
                 // Display the live transcription on the screen
-                transcriptionResult.innerText = 'Live Transcription: ' + transcript;
+                conversationResult.innerText = 'Live Transcription: ' + currentTranscription;
 
                 // Translate the transcript to the selected target language
-                const selectedLanguage = languageDropdown.value;
-                const translatedText = await translateText(transcript, selectedLanguage);
-                console.log('Translated Text:', translatedText);
-
-                // Display the translated text on the screen
-                translationResult.innerText = 'Translated Text: ' + translatedText;
+                translateAndDisplay(currentTranscription, sourceLanguage, targetLanguage);
             };
 
             recognition.start();
@@ -49,12 +56,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-// Function to perform translation using Google Cloud Translate API
-async function translateText(text, targetLanguage) {
-    const apiKey = 'AIzaSyDWfn8h6XwTHTqB2zs4QY8O_N7HENkb1Ug';
-    const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
+    // Function to perform translation using Google Cloud Translate API and display on the screen
+    async function translateAndDisplay(text, sourceLanguage, targetLanguage) {
+        const apiKey = 'AIzaSyAG4b6EvtKIO4EypNkbKgiLrQqB9Q3-loY';
+        const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
 
-    try {
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -62,34 +68,21 @@ async function translateText(text, targetLanguage) {
             },
             body: JSON.stringify({
                 q: text,
-                source: 'auto',  // Auto-detect the source language
+                source: sourceLanguage,
                 target: targetLanguage,
             }),
         });
 
         const result = await response.json();
-        console.log('Google Cloud Translate API Response:', result);
 
-        if (response.ok) {
-            if (result.data && result.data.translations && result.data.translations.length > 0) {
-                const translation = result.data.translations[0].translatedText;
-                return translation;
-            } else {
-                console.error('Translation error:', result);
-                return 'Translation not available';
-            }
+        if (result.data && result.data.translations && result.data.translations.length > 0) {
+            const translation = result.data.translations[0].translatedText;
+            
+            // Display the translated text on the screen
+            conversationResult.innerText += '\n\nTranslated Text: ' + translation;
         } else {
-            console.error('Google Cloud Translate API Error:', result.error.message);
-            return 'Translation not available';
+            console.error('Translation error:', result);
+            conversationResult.innerText += '\n\nTranslation not available';
         }
-    } catch (error) {
-        console.error('Error in translation API:', error);
-        return 'Translation not available';
     }
-}
-
-
-
-
-
 });
