@@ -8,33 +8,43 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let recognition = null;
     let isTranscribing = false;
+    let spokenSentences = new Set(); // Keep track of spoken sentences
 
     startButton.addEventListener('click', async function () {
         try {
             const sourceLanguage = sourceLanguageDropdown.value;
             const targetLanguage = targetLanguageDropdown.value;
 
+            // Access the microphone
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             console.log('Microphone access granted!');
 
+            // Initialize speech recognition
             recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
             recognition.continuous = true;
-            recognition.interimResults = true; // Enable interim results
+            recognition.interimResults = true;
             recognition.lang = sourceLanguage;
 
             recognition.onresult = function (event) {
-                let interimTranscript = '';
+                let finalTranscript = '';
 
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    interimTranscript += event.results[i][0].transcript + ' ';
-                }
+                    if (event.results[i].isFinal) {
+                        finalTranscript = event.results[i][0].transcript.trim();
 
-                // Display the live transcription on the screen
-                conversationResult.innerText = 'Live Transcription: ' + interimTranscript;
+                        // Check if the sentence is not repeated
+                        if (!spokenSentences.has(finalTranscript)) {
+                            // Display the live transcription
+                            conversationResult.innerText = 'Live Transcription: ' + finalTranscript;
 
-                if (isTranscribing) {
-                    // Translate the transcript to the selected target language
-                    translateAndDisplay(interimTranscript, sourceLanguage, targetLanguage);
+                            if (isTranscribing) {
+                                // Translate and speak asynchronously
+                                translateAndSpeak(finalTranscript, sourceLanguage, targetLanguage);
+                                // Add the sentence to the spoken set to avoid repetition
+                                spokenSentences.add(finalTranscript);
+                            }
+                        }
+                    }
                 }
             };
 
@@ -49,67 +59,68 @@ document.addEventListener('DOMContentLoaded', function () {
         stopTranscription();
     });
 
-    // Function to stop transcription and release the microphone
     function stopTranscription() {
         if (recognition) {
             recognition.stop();
             console.log('Transcription stopped');
             isTranscribing = false;
+            spokenSentences.clear();
         }
     }
 
-    // Function to perform translation using Google Cloud Translate API and display on the screen
-    async function translateAndDisplay(text, sourceLanguage, targetLanguage) {
-        const apiKey = 'Google api key';
-        const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
+    async function translateAndSpeak(text, sourceLanguage, targetLanguage) {
+        try {
+            const apiKey = 'AIzaSyAG4b6EvtKIO4EypNkbKgiLrQqB9Q3-loY';
+            const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
 
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                q: text,
-                source: sourceLanguage,
-                target: targetLanguage,
-            }),
-        });
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    q: text,
+                    source: sourceLanguage,
+                    target: targetLanguage,
+                }),
+            });
 
-        const result = await response.json();
+            const result = await response.json();
 
-        if (result.data && result.data.translations && result.data.translations.length > 0) {
-            const translation = result.data.translations[0].translatedText;
+            if (result.data && result.data.translations && result.data.translations.length > 0) {
+                const translation = result.data.translations[0].translatedText;
 
-            // Display the translated text on the screen
-            conversationResult.innerText += '\n\nTranslated Text: ' + translation;
+                // Display the translated text
+                conversationResult.innerText += '\n\nTranslated Text: ' + translation;
 
-            // Speak the translated text using Google Text-to-Speech API
-            speakTextGoogleTTS(translation, targetLanguage);
-        } else {
-            console.error('Translation error:', result);
+                // Speak the translated text asynchronously
+                speakText(translation, targetLanguage);
+            } else {
+                console.error('Translation error:', result);
+                conversationResult.innerText += '\n\nTranslation not available';
+            }
+        } catch (error) {
+            console.error('Translation error:', error);
             conversationResult.innerText += '\n\nTranslation not available';
         }
     }
 
-    // Function to speak text using Google Text-to-Speech API
-    async function speakTextGoogleTTS(text, targetLanguage) {
-        // Clear previous audio before playing a new one
+    async function speakText(text, targetLanguage) {
         if (audioElement) {
             audioElement.pause();
             audioElement = null;
         }
 
-        const audioUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${targetLanguage}&client=tw-ob`;
+        const audioUrl = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(
+            text
+        )}&tl=${targetLanguage}&client=tw-ob`;
 
         audioElement = new Audio(audioUrl);
 
-        // Handle the play promise to avoid Uncaught (in promise) error
         const playPromise = audioElement.play();
 
         if (playPromise !== undefined) {
-            playPromise.then(_ => {
-                // Audio started playing
-            }).catch(error => {
+            playPromise.then(_ => {}).catch(error => {
                 console.error('Audio play error:', error);
             });
         }
